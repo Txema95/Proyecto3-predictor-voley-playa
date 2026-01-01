@@ -1,15 +1,34 @@
+import pandas as pd
+import streamlit as st
+from pathlib import Path
 from config import BCN, DATE_START, DATE_END
 from downloadData import download_data_from_meteostat
+from viewData import viewDataAnalysis
+from styles import apply_custom_styles, init_page_config
+from viewDataTransform import viewDataTransform
 
+# Configurar página Streamlit
+init_page_config()
+
+apply_custom_styles()
 
 def main():
     """
-        Uso de la aplicación para predecir el clima en Barcelona para poder hacer deporte (voley playa).
-        
-        -Usar def para descargar datos de meteostat.
+    Aplicación Streamlit para analizar datos climáticos de Barcelona.
+    Descarga datos de meteostat y muestra análisis completo.
     """
     
-    download_data_from_meteostat(BCN, DATE_START, DATE_END)
+    tab1, tab2 = st.tabs([
+        "Data Analysis",
+        "Data Transform"
+    ])
+    
+    with tab1:
+        viewDataAnalysis()
+    
+    with tab2:
+        viewDataTransform()
+
 
 if __name__ == "__main__":
     main()
