@@ -3,6 +3,7 @@ import streamlit as st
 from pathlib import Path
 from config import BCN, DATE_START, DATE_END
 from downloadData import download_data_from_meteostat
+from dataClean import clean_clima_data
 from dataAnalysis import inspect_dataset, summarize_nulls, summarize_zeros, column_statistics
 
 def viewDataAnalysis():
@@ -24,6 +25,7 @@ def viewDataAnalysis():
         if st.button("Download Data", type="primary", use_container_width=True):
             with st.spinner("Downloading data from meteostat..."):
                 download_data_from_meteostat(BCN, DATE_START, DATE_END)
+                df_cleaned = clean_clima_data("clima_barcelona_10anos.csv", "clima_barcelona_limpio.csv")
                 st.success("Data downloaded successfully!")
     
     st.markdown("---")
@@ -31,7 +33,7 @@ def viewDataAnalysis():
     # PASO 2: Cargar datos
     st.markdown('<div class="step-header">Step 2: Load Data</div>', unsafe_allow_html=True)
     
-    csv_path = "clima_barcelona_10anos.csv"
+    csv_path = "clima_barcelona_limpio.csv"
     
     if not Path(csv_path).exists():
         st.error(f"File not found: {csv_path}")

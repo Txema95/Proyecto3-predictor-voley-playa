@@ -16,7 +16,9 @@ def main():
     """
     Aplicación Streamlit para analizar datos climáticos de Barcelona.
     Descarga datos de meteostat y muestra análisis completo.
+    
     """
+    # Recorte de datos hasta 31111,2018-07-20 07:00:00
     
     tab1, tab2 = st.tabs([
         "Data Analysis",
