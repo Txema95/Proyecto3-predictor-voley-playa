@@ -410,6 +410,57 @@ class ClimateDataTransformer:
         
         return self
     
+    def prepare_for_modeling(self) -> pd.DataFrame:
+        #todo: el dropna borra los datos previos al 2022-08-09 debido a que las columnas wpgt, tsun y coco son nulos, mirar de arreglar esto
+        if('target_lluvia' in self.df.columns):
+            self.df['target_24h'] = self.df['target_lluvia'].shift(-24)
+
+        if('snow' in self.df.columns):
+            #Eliminamos columnas innecesarias
+            cols_to_drop = ['snow','tsun','wpgt','coco']
+            self.df = self.df.drop(columns=cols_to_drop)
+
+        # Transformar dirección del viento a componentes U y V (Vectores)
+        self.df['wind_u'] = self.df['wspd'] * np.cos(np.deg2rad(self.df['wdir']))
+        self.df['wind_v'] = self.df['wspd'] * np.sin(np.deg2rad(self.df['wdir']))
+
+        # Crear Lags (¿Qué pasó hace 6h y 24h?)
+        # Esto le da al modelo "memoria"
+        for col in ['temp', 'rhum', 'pres', 'wspd']:
+            self.df[f'{col}_lag_6h'] = self.df[col].shift(6)
+            self.df[f'{col}_lag_24h'] = self.df[col].shift(24)
+        # Diferencia de presión (Crucial para lluvia)
+        # Si la presión baja rápido, es muy probable que llueva
+        self.df['pres_diff'] = self.df['pres'] - self.df['pres'].shift(3)
+
+        # Usamos Get Dummies para convertir categorías en columnas de 0 y 1
+        self.df = pd.get_dummies(self.df, columns=['parts_of_day'])
+
+        self.df['pres_delta_24h'] = self.df['pres'] - self.df['pres'].shift(24)
+        # 1. Proximidad al punto de rocío (Fundamental)
+        self.df['dew_point_diff'] = self.df['temp'] - self.df['dwpt']
+
+        # 2. Humedad máxima en las últimas 24h
+        self.df['rhum_max_24h'] = self.df['rhum'].rolling(window=24).max()
+        # 3. Cambio de la tendencia de presión (Aceleración)
+        self.df['pres_acceleration'] = self.df['pres_delta_24h'].diff()
+
+        df_ready = self.df.dropna()
+        
+        return df_ready
+
+    def get_df_removing_null_values(self) -> pd.DataFrame:
+        """
+        Remove rows with null values after transformations.
+        
+        Returns
+        -------
+        self
+        """
+        df_ready = self.df.dropna()
+        return df_ready
+
+
     def get_transformed_data(self) -> pd.DataFrame:
         """
         Get the transformed dataframe.

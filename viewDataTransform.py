@@ -34,11 +34,12 @@ def viewDataTransform():
     df = pd.read_csv(csv_path, parse_dates=['time'])
     
     # Crear pestañas
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "Quick Transform",
         "Custom Transform",
         "Compare Distributions",
-        "Climate Features"
+        "Climate Features",
+        "Prepare for Modeling"
     ])
     
     # ==================== TAB 1: QUICK TRANSFORM ====================
@@ -327,7 +328,26 @@ def viewDataTransform():
             
             with col2:
                 st.info(f"Total columns: {len(feature_df.columns)}\n\nNew features: {len(feature_df.columns) - len(df.columns)}")
-    
+    with tab5:
+        st.markdown("### Prepare Data for Modeling")        
+        st.info("Prepara los datos transformados para su uso en modelos de machine learning. \n\n" 
+                "- Creamos el Target del futuro **(target_24h)**: Como queremos predecir si lloverá mañana a la misma hora, necesitamos que en la fila de hoy (ej. lunes 10:00) aparezca el valor de la lluvia de mañana (martes 10:00).\n\n"
+                "- Eliminamos columnas innecesarias (snow)\n\n"
+                "- Transformar dirección del viento a componentes U y V (Vectores)\n\n"
+                "- Crear Lags (¿Qué pasó hace 6h y 24h?), esto le da al modelo \"memoria\"\n\n"
+                "- Diferencia de presión (Crucial para lluvia). Si la presión baja rápido, es muy probable que llueva")
+        
+        
+        if st.button("Prepare", type="primary", use_container_width=True):
+            with st.spinner("Preparing..."):
+                transformer = ClimateDataTransformer(df)
+                #st.dataframe(df)
+                df_ready = transformer.prepare_for_modeling()
+                df_ready.to_csv('datos_modelo.csv')
+                st.success("Datos preparados y exportados a 'datos_modelo.csv'")
+        
+        
+
     st.markdown("---")
     st.caption("Data Transformation Tool - Barcelona Climate Data")
 

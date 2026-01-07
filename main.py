@@ -6,6 +6,7 @@ from downloadData import download_data_from_meteostat
 from viewData import viewDataAnalysis
 from styles import apply_custom_styles, init_page_config
 from viewDataTransform import viewDataTransform
+from modelo.model_predict import exec as execModelRF
 
 # Configurar página Streamlit
 init_page_config()
@@ -20,9 +21,10 @@ def main():
     """
     # Recorte de datos hasta 31111,2018-07-20 07:00:00
     
-    tab1, tab2 = st.tabs([
+    tab1, tab2, tab3 = st.tabs([
         "Data Analysis",
-        "Data Transform"
+        "Data Transform",
+        "Model"
     ])
     
     with tab1:
@@ -30,6 +32,8 @@ def main():
     
     with tab2:
         viewDataTransform()
+    with tab3:
+        execModelRF()
 
 
 if __name__ == "__main__":
