@@ -1,5 +1,5 @@
 from datetime import datetime
-from meteostat import Hourly
+from meteostat import Hourly, Daily
 import pandas as pd
 
 def download_data_from_meteostat_raw(point, date_start, date_end):
@@ -22,6 +22,28 @@ def download_data_from_meteostat_raw(point, date_start, date_end):
     # 6. Exportar a CSV
     df.to_csv('clima_barcelona_10anos_raw.csv') # Asegúrate de que el nombre coincida con viewData.py
     print(f"Descarga de datos limpios(raw) completada. Se han guardado {len(df)} registros.")
+
+def download_data_from_meteostat_raw_daily(point, date_start, date_end):
+    data = Daily(point, date_start, date_end)
+    df = data.fetch()
+    
+
+    df = df.reset_index()
+    # Convertir time a datetime
+    #df['time'] = pd.to_datetime(df['time'])
+    
+    # Extraer componentes temporales
+    #df['date'] = df['time'].dt.date
+    #df['hour'] = df['time'].dt.hour
+    #df['month'] = df['time'].dt.month
+    #df['day_of_year'] = df['time'].dt.dayofyear
+    #df['day_of_week'] = df['time'].dt.dayofweek
+    
+    #df = df.sort_values('time').reset_index(drop=True)
+    # 6. Exportar a CSV
+    df.to_csv('clima_barcelona_10anos_raw_daily.csv') # Asegúrate de que el nombre coincida con viewData.py
+    print(f"Descarga de datos limpios(raw) completada. Se han guardado {len(df)} registros.")
+
 
 
 def download_data_from_meteostat(point, date_start, date_end):
