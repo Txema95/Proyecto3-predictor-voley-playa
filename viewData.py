@@ -2,8 +2,7 @@ import pandas as pd
 import streamlit as st
 from pathlib import Path
 from config import BCN, DATE_START, DATE_END
-from downloadData import download_data_from_meteostat
-from dataClean import clean_clima_data
+from downloadData import download_data_from_meteostat_raw_daily, download_data_from_meteostat_raw
 from dataAnalysis import inspect_dataset, summarize_nulls, summarize_zeros, column_statistics
 
 def viewDataAnalysis():
@@ -19,13 +18,23 @@ def viewDataAnalysis():
     col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
-        st.info(f"Location: Barcelona | Period: {DATE_START.year} - {DATE_END.year}")
+        st.info(f"Location: Barcelona | Period: {DATE_START.year} - {DATE_END.year} | Hourly")
     
     with col2:
         if st.button("Download Data", type="primary", use_container_width=True):
             with st.spinner("Downloading data from meteostat..."):
-                download_data_from_meteostat(BCN, DATE_START, DATE_END)
-                df_cleaned = clean_clima_data("clima_barcelona_10anos.csv", "clima_barcelona_limpio.csv")
+                download_data_from_meteostat_raw(BCN, DATE_START, DATE_END)
+                st.success("Data downloaded successfully!")
+                
+    col1_d, col2_d, col3_d = st.columns([2, 1, 1])
+    
+    with col1_d:
+        st.info(f"Location: Barcelona | Period: {DATE_START.year} - {DATE_END.year} | Daily")
+    
+    with col2_d:
+        if st.button("Download Data Daily", type="primary", use_container_width=True):
+            with st.spinner("Downloading data from meteostat..."):
+                download_data_from_meteostat_raw_daily(BCN, DATE_START, DATE_END)
                 st.success("Data downloaded successfully!")
     
     st.markdown("---")

@@ -448,6 +448,74 @@ class ClimateDataTransformer:
         df_ready = self.df.dropna()
         
         return df_ready
+    
+    
+    def prepare_for_modeling_next_day(self) -> pd.DataFrame:
+        """
+        Crea targets para predecir lluvia del día SIGUIENTE en dos franjas:
+        - manana_next_day: 8-12h del día siguiente
+        - tarde_next_day: 12-20h del día siguiente
+        """
+        # Crear variable de lluvia binaria
+        self.df['lluvia'] = (self.df['prcp'] > 0).astype(int)
+        # Agrupar por fecha y hora para identificar franjas
+        self.df['franja'] = pd.cut(self.df['hour'], 
+                            bins=[-1, 8, 12, 20, 24], 
+                            labels=['madrugada', 'manana', 'tarde', 'noche'])
+        
+        
+        # Calcular si hubo lluvia en cada franja por día
+        lluvia_por_franja = self.df.groupby(['date', 'franja'])['lluvia'].max().unstack(fill_value=0)
+        
+        # Crear targets del día SIGUIENTE (shift -1 para obtener el día futuro)
+        df_daily = lluvia_por_franja.reset_index()
+        df_daily['manana_next_day'] = df_daily['manana'].shift(-1)
+        df_daily['tarde_next_day'] = df_daily['tarde'].shift(-1)
+        
+        # Merge con el dataframe original
+        self.df = self.df.merge(df_daily[['date', 'manana_next_day', 'tarde_next_day']], 
+                    on='date', how='left')
+        
+        
+        """Crea features temporales para capturar patrones"""
+        
+        # ---- LAGS (valores pasados) ----
+        lag_hours = [1, 3, 6, 12, 24]
+        for col in ['temp', 'dwpt', 'rhum', 'pres', 'wspd']:
+            for lag in lag_hours:
+                self.df[f'{col}_lag_{lag}h'] = self.df[col].shift(lag)
+        
+        # ---- ROLLING MEANS (medias móviles) ----
+        windows = [3, 6, 12, 24]
+        for col in ['temp', 'rhum', 'pres', 'wspd']:
+            for window in windows:
+                self.df[f'{col}_rolling_mean_{window}h'] = self.df[col].rolling(window=window, min_periods=1).mean()
+                self.df[f'{col}_rolling_std_{window}h'] = self.df[col].rolling(window=window, min_periods=1).std()
+        
+        # ---- TENDENCIAS (cambios) ----
+        for col in ['temp', 'pres', 'rhum']:
+            self.df[f'{col}_diff_1h'] = self.df[col].diff(1)
+            self.df[f'{col}_diff_3h'] = self.df[col].diff(3)
+            self.df[f'{col}_diff_24h'] = self.df[col].diff(24)
+        
+        # ---- PRECIPITACIÓN HISTÓRICA ----
+        self.df['prcp_last_24h'] = self.df['prcp'].rolling(window=24, min_periods=1).sum()
+        self.df['prcp_last_48h'] = self.df['prcp'].rolling(window=48, min_periods=1).sum()
+        self.df['lluvia_last_24h'] = self.df['lluvia'].rolling(window=24, min_periods=1).sum()
+        
+        # ---- FEATURES CÍCLICAS (para capturar estacionalidad) ----
+        self.df['hour_sin'] = np.sin(2 * np.pi * self.df['hour'] / 24)
+        self.df['hour_cos'] = np.cos(2 * np.pi * self.df['hour'] / 24)
+        self.df['month_sin'] = np.sin(2 * np.pi * self.df['month'] / 12)
+        self.df['month_cos'] = np.cos(2 * np.pi * self.df['month'] / 12)
+        
+        # ---- INTERACCIONES ----
+        self.df['temp_dwpt_diff'] = self.df['temp'] - self.df['dwpt']  # Diferencia importante para punto de rocío
+        self.df['wind_pressure_interaction'] = self.df['wspd'] * self.df['pres']
+        
+        
+        return self.df
+
 
     def get_df_removing_null_values(self) -> pd.DataFrame:
         """
