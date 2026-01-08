@@ -15,3 +15,20 @@ from algoritmos import random_forest
 
 def usar_random_forest(df):
     random_forest.ejecutar(df)
+
+def usar_random_forest_target_manana(df):
+    X_train_m, X_test_m, y_train_m, y_test_m, features_m = random_forest.preparar_datasets(df, 'manana_next_day')
+    model_manana =random_forest.entrenar_modelo(X_train_m, y_train_m)
+    results_manana = random_forest.evaluate_model(model_manana, X_train_m, X_test_m, 
+                                   y_train_m, y_test_m, features_m, 
+                                   "MAÑANA 8-12h")
+    
+    #entrenar modelo tarde
+    X_train_t, X_test_t, y_train_t, y_test_t, features_t = random_forest.preparar_datasets(df, 'tarde_next_day')
+    model_tarde = random_forest.entrenar_modelo(X_train_t, y_train_t)
+    results_tarde = random_forest.evaluate_model(model_tarde, X_train_t, X_test_t, 
+                                  y_train_t, y_test_t, features_t, 
+                                  "TARDE 12-20h")
+    
+    
+    random_forest.show_results(results_manana, results_tarde)

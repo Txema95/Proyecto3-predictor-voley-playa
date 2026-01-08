@@ -24,7 +24,8 @@ def viewDataTransform():
     st.markdown("---")
     
     # Cargar datos
-    csv_path = "clima_barcelona_10anos.csv"
+    #csv_path = "clima_barcelona_10anos.csv"
+    csv_path = "clima_barcelona_10anos_raw.csv"
     
     if not Path(csv_path).exists():
         st.error(f"File not found: {csv_path}")
@@ -342,7 +343,7 @@ def viewDataTransform():
             with st.spinner("Preparing..."):
                 transformer = ClimateDataTransformer(df)
                 #st.dataframe(df)
-                df_ready = transformer.prepare_for_modeling()
+                df_ready = transformer.prepare_for_modeling_next_day()
                 df_ready.to_csv('datos_modelo.csv')
                 st.success("Datos preparados y exportados a 'datos_modelo.csv'")
         

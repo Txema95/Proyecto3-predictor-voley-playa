@@ -7,4 +7,4 @@ def exec():
     st.write("Ejecutando modelo Random Forest...")
     df_ready = pd.read_csv('datos_modelo.csv')
     st.dataframe(df_ready)
-    algoritmo.usar_random_forest(df_ready)
+    algoritmo.usar_random_forest_target_manana(df_ready)

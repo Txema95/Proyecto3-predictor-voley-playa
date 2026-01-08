@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 from pathlib import Path
 from config import BCN, DATE_START, DATE_END
-from downloadData import download_data_from_meteostat
+from downloadData import download_data_from_meteostat, download_data_from_meteostat_raw
 from dataAnalysis import inspect_dataset, summarize_nulls, summarize_zeros, column_statistics
 
 def viewDataAnalysis():
@@ -23,7 +23,7 @@ def viewDataAnalysis():
     with col2:
         if st.button("Download Data", type="primary", use_container_width=True):
             with st.spinner("Downloading data from meteostat..."):
-                download_data_from_meteostat(BCN, DATE_START, DATE_END)
+                download_data_from_meteostat_raw(BCN, DATE_START, DATE_END)
                 st.success("Data downloaded successfully!")
     
     st.markdown("---")
