@@ -1,7 +1,7 @@
 
 import time
 import streamlit as st
-from algoritmos import random_forest, random_forest_daily, random_forest_wind, xgBoost
+from algoritmos import random_forest, random_forest_daily, random_forest_temp_daily, random_forest_temp_hours, random_forest_wind, xgBoost
 
 # def usar_fuerza_bruta(df_matriz_distancias):
 #     start = time.time()
@@ -41,3 +41,9 @@ def usar_random_forest_wind_target(df):
     
 def usar_xgboost_wind_target(df):
     xgBoost.ejecutar(df)
+    
+def usar_random_forest_temp_hours_target(df):
+    random_forest_temp_hours.ejecutar(df)
+    
+def usar_random_forest_temp_daily_target(df):
+    random_forest_temp_daily.ejecutar(df)
