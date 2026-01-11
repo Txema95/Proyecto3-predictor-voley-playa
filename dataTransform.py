@@ -450,6 +450,49 @@ class ClimateDataTransformer:
         return df_ready
     
     
+    def prepare_for_modeling_daily(self) -> pd.DataFrame:
+        # Crear la variable objetivo: ¿Lloverá mañana?
+        # Desplazamos la columna 'prcp' un lugar hacia atrás
+        self.df['target'] = (self.df['prcp'].shift(-1) > 0).astype(int)
+
+        # Eliminar la última fila (porque no sabemos si lloverá el día después del último dato)
+        self.df = self.df.dropna(subset=['target']).iloc[:-1]
+        # Extraer mes y día de la semana
+        self.df['month'] = self.df['time'].dt.month
+        self.df['day_of_year'] = self.df['time'].dt.dayofyear
+        # ¿Qué presión y temperatura hacía hace 1 y 2 días?
+        self.df['pres_lag_1'] = self.df['pres'].shift(1)
+        self.df['tavg_lag_1'] = self.df['tavg'].shift(1)
+        self.df['prcp_lag_1'] = self.df['prcp'].shift(1)
+
+        # Promedio de temperatura de los últimos 3 días
+        self.df['temp_roll_3'] = self.df['tavg'].rolling(window=3).mean()
+
+        # Acumulado de lluvia de la última semana
+        self.df['prcp_sum_7'] = self.df['prcp'].rolling(window=7).sum()
+        
+
+        self.df['month_sin'] = np.sin(2 * np.pi * self.df['month'] / 12)
+        self.df['month_cos'] = np.cos(2 * np.pi * self.df['month'] / 12)
+        # Es vital borrar los nulos que crea el shift al principio del dataset
+
+
+        # Variables de Retraso (Lags): Lo que pasó ayer
+        self.df['pres_ayer'] = self.df['pres'].shift(1)
+        self.df['tavg_ayer'] = self.df['tavg'].shift(1)
+        self.df['prcp_ayer'] = self.df['prcp'].shift(1)
+
+        # Medias Móviles: Tendencia de los últimos 3 días
+        self.df['tavg_media_3d'] = self.df['tavg'].rolling(window=3).mean()
+        self.df['pres_media_3d'] = self.df['pres'].rolling(window=3).mean()
+        
+        #Eliminamos columnas innecesarias
+        cols_to_drop = ['snow','wdir','wspd','wpgt','tsun']
+        self.df = self.df.drop(columns=cols_to_drop)
+
+        self.df = self.df.dropna()
+        return self.df
+
     def prepare_for_modeling_next_day(self) -> pd.DataFrame:
         """
         Crea targets para predecir lluvia del día SIGUIENTE en dos franjas:
@@ -516,6 +559,28 @@ class ClimateDataTransformer:
         
         return self.df
 
+    def prepare_for_modeling_wind(self) -> pd.DataFrame:        
+        # Crear targets del día SIGUIENTE (shift -1 para obtener el día futuro)
+        self.df['target_wspd'] = self.df['wspd'].shift(-1)
+
+        cols_to_drop = ['snow','wdir','wpgt','tsun']
+        self.df = self.df.drop(columns=cols_to_drop)
+
+        
+        self.df['day_of_year'] = self.df['time'].dt.dayofyear
+        self.df['day_cos'] = np.cos(2 * np.pi * self.df['day_of_year'] / 365)
+        self.df['day_sin'] = np.sin(2 * np.pi * self.df['day_of_year'] / 365)
+
+        """Crea features temporales para capturar patrones"""
+
+        self.df['pres_diff'] = self.df['pres'].diff()
+        
+        self.df['wspd_lag1'] = self.df['wspd'].shift(1)
+
+        self.df['pres_lag2'] = self.df['pres'].shift(2)
+        self.df['t_diff'] = self.df['tmax'] - self.df['tmin']
+        
+        return self.df
 
     def get_df_removing_null_values(self) -> pd.DataFrame:
         """

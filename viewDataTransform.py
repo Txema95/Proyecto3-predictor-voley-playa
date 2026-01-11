@@ -346,7 +346,31 @@ def viewDataTransform():
                 df_ready = transformer.prepare_for_modeling_next_day()
                 df_ready.to_csv('datos_modelo.csv')
                 st.success("Datos preparados y exportados a 'datos_modelo.csv'")
+
         
+        st.markdown("### Prepare Data for Modeling (Daily Target)") 
+        
+        if st.button("Prepare daily", type="primary", use_container_width=True):
+            with st.spinner("Preparing..."):
+                csv_path = "clima_barcelona_10anos_raw_daily.csv"                
+                df = pd.read_csv(csv_path, parse_dates=['time'])
+                transformer = ClimateDataTransformer(df)
+                #st.dataframe(df)
+                df_ready = transformer.prepare_for_modeling_daily()
+                df_ready.to_csv('datos_modelo_daily.csv')
+                st.success("Datos preparados y exportados a 'datos_modelo_daily.csv'")
+        
+        st.markdown("### Prepare Data for Modeling (Wind Target)") 
+        
+        if st.button("Prepare wind", type="primary", use_container_width=True):
+            with st.spinner("Preparing..."):
+                csv_path = "clima_barcelona_10anos_raw_daily.csv"                
+                df = pd.read_csv(csv_path, parse_dates=['time'])
+                transformer = ClimateDataTransformer(df)
+                #st.dataframe(df)
+                df_ready = transformer.prepare_for_modeling_wind()
+                df_ready.to_csv('datos_modelo_wind.csv')
+                st.success("Datos preparados y exportados a 'datos_modelo_wind.csv'")
         
 
     st.markdown("---")

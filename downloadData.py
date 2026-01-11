@@ -30,7 +30,7 @@ def download_data_from_meteostat_raw_daily(point, date_start, date_end):
 
     df = df.reset_index()
     # Convertir time a datetime
-    #df['time'] = pd.to_datetime(df['time'])
+    df['time'] = pd.to_datetime(df['time'])
     
     # Extraer componentes temporales
     #df['date'] = df['time'].dt.date
